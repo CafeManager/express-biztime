@@ -12,7 +12,9 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
     const id = req.params.id
     const invoice = await db.query(`SELECT * FROM invoices WHERE invoices.id = $1`, [id]);
-    console.log(invoice.rows[0])
+    if(!invoice.rowCount){
+        throw new ExpressError("Invoice ID not valid", 404)
+    }
     const company = await db.query(`SELECT * FROM companies WHERE code=$1`, [invoice.rows[0].comp_code]);
     const data = {...invoice.rows[0], company: company.rows[0]}
     return res.json(data)
@@ -42,6 +44,11 @@ router.delete('/:id', async (req, res, next) => {
     const result = await db.query(
         `DELETE FROM invoices WHERE id=$1`, [id]
     )
+    if(result.rowCount == 0){
+        throw new ExpressError("Invoice ID not valid", 404)
+    }
+    console.log(result)
+    
 
     return res.json({'status': 'deleted'})
 })

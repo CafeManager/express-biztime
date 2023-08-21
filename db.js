@@ -2,10 +2,8 @@
 
 const { Client, Pool } = require("pg")
 
-let DB_URI
-
 console.log("Connected to biztime")
-DB_URI = "postgresql://postgres:password@127.0.0.1:5432/biztime" 
+const DB_URI = (process.env.NODE_ENV !== "test") ? "postgresql://postgres:password@127.0.0.1:5432/biztime" : "postgresql://postgres:password@127.0.0.1:5432/biztime_test" 
 
 
 let db = new Client({

@@ -5,7 +5,6 @@ const ExpressError = require("../expressError")
 
 router.get('/', async (req, res, next) => {
     const results = await db.query(`SELECT id, comp_code FROM invoices`);
-    console.log(results.rows)
     return res.json({invoices: results.rows})
 })
 
@@ -28,12 +27,35 @@ router.post('/', async (req, res, next) => {
 })
 
 router.put('/:id', async (req, res, next) => {
-    const { amt } = req.body
+    const { amt, paid } = req.body
     const id = req.params.id
 
+    const invoice = await db.query(`SELECT * FROM invoices WHERE id=$1`, [id]);
+    const paidStatus = invoice.rows[0]['paid']
+
+    
+    let paidDate
+    if(paid === false & paidStatus === true){
+        paidDate = null;
+    } else if (paid === true & paidStatus === false) {
+        const date = new Date();
+
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        const today = `${year}-${month}-${day}`;
+        paidDate = today
+        newPaidStatus = false;
+    } else{
+        paidDate = invoice.rows[0]['paid_date']
+    }
+
     const result = await db.query(
-        `UPDATE invoices SET amt=$1 WHERE id=$2 RETURNING id, comp_code, amt, paid, add_date, paid_date`, [amt, id]
+        `UPDATE invoices SET amt=$1, paid_date=$3, paid=$4 WHERE id=$2 RETURNING id, comp_code, amt, paid, add_date, paid_date`, [amt, id, paidDate, paid]
     )
+    if(result.rowCount == 0){
+        throw new ExpressError("Invoice ID not valid", 404)
+    }
 
     return res.json({invoices: result.rows})
 })

@@ -2,6 +2,7 @@ const express = require("express");
 const router = new express.Router();
 const db = require("../db");
 const ExpressError = require("../expressError");
+const slugify = require("slugify")
 
 router.get("/", async (req, res, next) => {
     const results = await db.query(`SELECT code, name FROM companies`);
@@ -15,7 +16,6 @@ router.get("/:code", async (req, res, next) => {
             `SELECT * FROM companies WHERE code = $1`,
             [code]
         );
-        console.log(company);
         if (!company.rowCount) {
             throw new ExpressError("Company code not valid", 404);
         }
@@ -31,7 +31,7 @@ router.get("/:code", async (req, res, next) => {
 });
 
 router.post("/", async (req, res, next) => {
-    const code = req.body.code;
+    const code = slugify(req.body.code, {lower: true, remove: /[*+~.()'"!:@]/g});
     const name = req.body.name;
     const description = req.body.description;
     const results = await db.query(

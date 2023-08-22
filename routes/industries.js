@@ -4,7 +4,7 @@ const db = require("../db")
 const ExpressError = require("../expressError")
 
 router.get('/', async (req, res, next) => {
-    const results = await db.query(` SELECT * FROM industries JOIN industries_companies ON industries.code = industries_companies.industry_code JOIN companies ON companies.code = industries_companies.company_code`);
+    const results = await db.query(` SELECT * FROM industries LEFT JOIN industries_companies ON industries.code = industries_companies.industry_code JOIN companies ON companies.code = industries_companies.company_code`);
     return res.json({industries: results.rows})
 })
 

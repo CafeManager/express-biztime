@@ -23,9 +23,14 @@ router.get("/:code", async (req, res, next) => {
             `SELECT * FROM invoices WHERE comp_code = $1`,
             [company.rows[0].code]
         );
-        const data = { ...company.rows[0], invoices: invoices.rows };
+        const industries = await db.query(
+            `SELECT industries.industry, industries.code FROM industries JOIN industries_companies ON industries.code = industries_companies.industry_code JOIN companies ON companies.code = industries_companies.company_code WHERE companies.code = $1;`,
+            [company.rows[0].code]
+        );
+        const data = { ...company.rows[0], invoices: invoices.rows, industries: industries.rows };
         return res.json(data);
     } catch (err) {
+        console.log(err)
         next(new ExpressError(err));
     }
 });
